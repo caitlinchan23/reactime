@@ -49,6 +49,11 @@ const StateRoute = (props: StateRouteProps) => {
   const { hierarchy, sliderIndex, viewIndex } = tabs[currentTab];
   const isRecoil = snapshot.atomsComponents ? true : false;
   const [noRenderData, setNoRenderData] = useState(false);
+  const [isToggled, setIsToggled] = useState('barStack');
+  const toggleView = () => {
+    console.log('view was changed')
+    isToggled === 'frequencyCards' ? setIsToggled('barStack') : setIsToggled('frequencyCards');
+  }
   // component map zoom state
   const [{ x, y, k }, setZoomState]: any = useState({
     x: 150,
@@ -118,7 +123,10 @@ const StateRoute = (props: StateRouteProps) => {
       return (
         <ParentSize>
           {({ width, height }) => (
+            <div>
+            <button onClick={toggleView}>Toggle View</button>
             <PerformanceVisx
+              view={isToggled}
               width={width}
               height={height}
               snapshots={snapshots}
@@ -126,6 +134,7 @@ const StateRoute = (props: StateRouteProps) => {
               changeView={changeView}
               hierarchy={hierarchy}
             />
+            </div>
           )}
         </ParentSize>
 

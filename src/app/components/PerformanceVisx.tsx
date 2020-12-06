@@ -12,6 +12,9 @@ import { schemeSet3 } from 'd3-scale-chromatic';
 import snapshots from './snapshots';
 import { onHover, onHoverExit } from '../actions/actions';
 import { useStoreContext } from '../store'
+import RenderingFrequency from './RenderingFrequency';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
 
 /* NOTES
 Issue - Not fully compatible with recoil apps. Reference the recoil-todo-test.
@@ -69,7 +72,6 @@ const tooltipStyles = {
   lineHeight: '18px',
   fontFamily: 'Roboto'
 };
-
 /* DATA HANDLING HELPER FUNCTIONS */
 const traverse = (snapshot, data, currMaxTotalRender = 0) => {
   if (!snapshot.children[0]) return;
@@ -126,7 +128,7 @@ const getPerfMetrics = (snapshots, snapshotsIds): {} => {
   const perfData = {
     barStack: [],
     componentData: {},
-    maxTotalRender: 0
+    maxTotalRender: 0,
   };
   snapshots.forEach((snapshot, i) => {
     perfData.barStack.push({snapshotId: snapshotsIds[i]});
@@ -134,12 +136,14 @@ const getPerfMetrics = (snapshots, snapshotsIds): {} => {
   });
   return perfData;
 };
+// toggle fxn (data)
+// if (data.view === "barStack") change it to "frequencyCards"
 
 /* EXPORT COMPONENT */
 const PerformanceVisx = (props: BarStackProps) => {
   // hook used to dispatch onhover action in rect
   const [{ tabs, currentTab }, dispatch] = useStoreContext();
-  const { width, height, snapshots, hierarchy } = props;
+  const { view, width, height, snapshots, hierarchy } = props;
 
   const {
     tooltipOpen, tooltipLeft, tooltipTop, tooltipData, hideTooltip, showTooltip,
@@ -179,9 +183,9 @@ const PerformanceVisx = (props: BarStackProps) => {
   snapshotIdScale.rangeRound([0, xMax]);
   renderingScale.range([yMax, 0]);
 
-  // if performance tab is too small it will not return VISX component
-  return width < 10 ? null : (
-    <div style={{ position: 'relative' }}>
+  const BarGraph = (props) => {
+   return (
+    <div> 
       <svg ref={containerRef} width={width} height={height}>
         <rect
           x={0}
@@ -190,7 +194,7 @@ const PerformanceVisx = (props: BarStackProps) => {
           height={height}
           fill={background}
           rx={14}
-        />
+          />
         <Grid
           top={margin.top}
           left={margin.left}
@@ -201,7 +205,7 @@ const PerformanceVisx = (props: BarStackProps) => {
           stroke="black"
           strokeOpacity={0.1}
           xOffset={snapshotIdScale.bandwidth() / 2}
-        />
+          />
         <Group top={margin.top} left={margin.left}>
           <BarStack
             data={data.barStack}
@@ -210,7 +214,7 @@ const PerformanceVisx = (props: BarStackProps) => {
             xScale={snapshotIdScale}
             yScale={renderingScale}
             color={colorScale}
-          >
+            >
             {barStacks =>
               barStacks.map(barStack =>
                 barStack.bars.map(((bar, idx) => {
@@ -220,7 +224,7 @@ const PerformanceVisx = (props: BarStackProps) => {
                     bar.height = 0;
                   }
                   return (
-                  <rect
+                    <rect
                     key={`bar-stack-${barStack.index}-${bar.index}`}
                     x={bar.x}
                     y={bar.y}
@@ -232,9 +236,9 @@ const PerformanceVisx = (props: BarStackProps) => {
                     onMouseLeave={() => {
                       console.log('bar: ', bar)
                       dispatch(onHoverExit(data.componentData[bar.key].rtid),
-                        tooltipTimeout = window.setTimeout(() => {
-                          hideTooltip()
-                        }, 300))
+                      tooltipTimeout = window.setTimeout(() => {
+                        hideTooltip()
+                      }, 300))
                     }}
                     // Cursor position in window updates position of the tool tip
                     onMouseMove={event => {
@@ -248,10 +252,10 @@ const PerformanceVisx = (props: BarStackProps) => {
                         tooltipLeft: left,
                       });
                     }}
-                  />
-                )}))
-              )
-            }
+                    />
+                    )}))
+                    )
+                  }
           </BarStack>
         </Group>
         <AxisLeft
@@ -267,7 +271,7 @@ const PerformanceVisx = (props: BarStackProps) => {
             verticalAnchor: 'middle',
             textAnchor: 'end',
           })}
-        />
+          />
         <AxisBottom
           top={yMax + margin.top}
           left={margin.left}
@@ -280,11 +284,10 @@ const PerformanceVisx = (props: BarStackProps) => {
             fontSize: 11,
             textAnchor: 'middle',
           })}
-        />
+          />
         <Text x={-xMax / 2} y="15" transform="rotate(-90)" fontSize={12} fill="#FFFFFF"> Rendering Time (ms) </Text>
         <Text x={xMax / 2} y={yMax + 100} fontSize={12} fill="#FFFFFF"> Snapshot Id </Text>
       </svg>
-
       {/* FOR HOVER OVER DISPLAY */}
       {tooltipOpen && tooltipData && (
         <TooltipInPortal
@@ -294,9 +297,9 @@ const PerformanceVisx = (props: BarStackProps) => {
           style={tooltipStyles}
         >
           <div style={{ color: colorScale(tooltipData.key) }}>
-            {' '}
-            <strong>{tooltipData.key}</strong>
-            {' '}
+          {' '}
+          <strong>{tooltipData.key}</strong>
+          {' '}
           </div>
           <div>{data.componentData[tooltipData.key].stateType}</div>
           <div>
@@ -310,6 +313,16 @@ const PerformanceVisx = (props: BarStackProps) => {
           </div>
         </TooltipInPortal>
       )}
+    </div>
+  )};
+    
+    // if performance tab is too small it will not return VISX component
+    return width < 10 ? null : (
+      <div style={{ position: 'relative' }}>
+          {view === 'frequencyCards' 
+            ? <BarGraph /> 
+            : <BarGraph />
+          }
     </div>
   );
 };
