@@ -91,6 +91,7 @@ function ActionContainer() {
       />
     );
   });
+  console.log('actionsArr: ', actionsArr);
 
   return (
     <div className="action-container">
